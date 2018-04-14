@@ -6,12 +6,11 @@ import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.annotation.Timed;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
@@ -19,8 +18,11 @@ import java.util.List;
 /**
  * Created by Andrey Tyukavkin.
  */
+
 @Timed
 @RestController
+@RequestMapping(value = "/football")
+@Api(value = "Teams", description = "Football teams operations")
 public class TeamController {
 
     @Autowired
@@ -36,14 +38,16 @@ public class TeamController {
         counter = metrics.meter("requests");
     }
 
-    @RequestMapping("/teams")
+    @ApiOperation(value = "List of available teams", response = Team.class, responseContainer = "List")
+    @RequestMapping(value = "/teams", method = RequestMethod.GET, produces = "application/json")
     public String getTeams() throws JsonProcessingException {
         counter.mark();
         List<Team> teams = teamsService.findAllTeams();
         return new ObjectMapper().writeValueAsString(teams);
     }
 
-    @RequestMapping("/teams/search")
+    @ApiOperation(value = "Search team by title", response = Team.class)
+    @RequestMapping(value = "/teams/search", method = RequestMethod.GET, produces = "application/json")
     public String searchTeam(@RequestParam String teamTitle) throws JsonProcessingException {
         counter.mark();
         if (StringUtils.isNotBlank(teamTitle)) {
@@ -58,14 +62,16 @@ public class TeamController {
 
     }
 
-    @RequestMapping("/teams/{id}")
+    @ApiOperation(value = "Search team by ID", response = Team.class)
+    @RequestMapping(value = "/teams/{id}", method = RequestMethod.GET, produces = "application/json")
     public String getTeamById(@PathVariable Integer id) throws JsonProcessingException {
         counter.mark();
         Team team = teamsService.findTeamById(id);
         return team != null ? new ObjectMapper().writeValueAsString(team) : "";
     }
 
-    @RequestMapping("/version")
+    @ApiOperation(value = "Version", response = String.class)
+    @RequestMapping(value = "/version", method = RequestMethod.GET)
     public String version() {
         return "1.0";
     }
